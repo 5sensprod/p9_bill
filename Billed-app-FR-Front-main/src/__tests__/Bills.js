@@ -128,5 +128,76 @@ describe("Given I am connected as an employee", () => {
       expect(mockElement.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
     });
 
+    test('getBills should return an array of bills sorted by date', async () => {
+      // Set up
+      const bills = [
+        {
+          id: '1',
+          date: '2022-04-22',
+          amount: 100,
+          name: 'Bill 1',
+          status: 'pending',
+        },
+        {
+          id: '2',
+          date: '2022-04-23',
+          amount: 200,
+          name: 'Bill 2',
+          status: 'accepted',
+        },
+        {
+          id: '3',
+          date: '2022-04-21',
+          amount: 300,
+          name: 'Bill 3',
+          status: 'refused',
+        },
+      ];
+      const store = {
+        bills: jest.fn().mockReturnValue({
+          list: jest.fn().mockResolvedValue(bills),
+        }),
+      };
+      const billsPage = new Bills({
+        document,
+        onNavigate,
+        store,
+        localStorage: window.localStorage,
+      });
+
+      // Action
+      const result = await billsPage.getBills();
+
+      // Assert
+      expect(store.bills().list).toHaveBeenCalled();
+      expect(result).toEqual([
+        {
+          id: '2',
+          date: '23 Avr. 22',  // date in new format
+          amount: 200,
+          name: 'Bill 2',
+          status: 'Accepté',
+          formattedDate: expect.any(String),
+        },
+        {
+          id: '1',
+          date: '22 Avr. 22',  // date in new format
+          amount: 100,
+          name: 'Bill 1',
+          status: 'En attente',
+          formattedDate: expect.any(String),
+        },
+        {
+          id: '3',
+          date: '21 Avr. 22',  // date in new format
+          amount: 300,
+          name: 'Bill 3',
+          status: 'Refused',  // Updated status value
+          formattedDate: expect.any(String),
+        },
+      ]);
+
+    })
+
   })
 })
