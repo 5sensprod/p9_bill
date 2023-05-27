@@ -38,8 +38,10 @@ export default class {
             try {
               return {
                 ...doc,
-                // utilisation de la date formatée
-                formattedDate: formatDate(doc.date),
+                // utilisation de la date formatée pour l'affichage
+                date: formatDate(doc.date),
+                // utilisation de la date non formatée pour le tri
+                formattedDate: doc.date,
                 status: formatStatus(doc.status)
               }
             } catch(e) {
@@ -54,7 +56,7 @@ export default class {
             }
           })
           // tri des factures par date décroissante
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
+          .sort((a, b) => new Date(b.formattedDate) - new Date(a.formattedDate));
           console.log('length', bills.length)
         return bills
       })
