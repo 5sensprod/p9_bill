@@ -8,6 +8,8 @@ import { bills } from "../fixtures/bills.js"
 import { ROUTES_PATH } from "../constants/routes.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 
+import Bills from '../containers/Bills.js';
+
 import router from "../app/Router.js";
 
 describe("Given I am connected as an employee", () => {
@@ -39,6 +41,92 @@ describe("Given I am connected as an employee", () => {
       const datesSorted = datesCopy.sort(antiChrono);
       expect(dates).toEqual(datesSorted)
     })
+
+    // Ajout tests unitaires
+    test("When I click on the 'Nouvelle note de frais' button, I should be redirected to the 'Nouvelle note de frais' page", async () => {
+      // Set up
+      const onNavigate = jest.fn();
+      document.body.innerHTML = BillsUI({ data: [] });
+      const root = document.getElementById("root");
+      const billPage = new Bills({
+        document,
+        onNavigate,
+        store: null,
+        localStorage: window.localStorage,
+      });
+      const buttonNewBill = screen.getByTestId("btn-new-bill");
+
+      // Action
+      buttonNewBill.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      // Assert
+      expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH.NewBill);
+    })
+
+    test("should open the modal and display the bill image", () => {
+      // Set up
+      document.body.innerHTML = `<div id="modaleFile">
+                                     <div class="modal-body"></div>
+                                   </div>`;
+      const icon = document.createElement("i");
+      icon.setAttribute("data-bill-url", "https://example.com/bill.png");
+
+      // Mock jQuery and modal function
+      const modalMock = jest.fn();
+      global.$ = jest.fn((selector) => {
+        const element = document.querySelector(selector);
+        return {
+          width: () => 50,
+          find: (innerSelector) => {
+            const innerElement = element.querySelector(innerSelector);
+            return {
+              html: (content) => {
+                if (content) {
+                  innerElement.innerHTML = content;
+                }
+              },
+            };
+          },
+          hasClass: () => true,
+          modal: modalMock,
+          click: jest.fn(),
+        };
+      });
+
+      const billsPage = new Bills({
+        document,
+        onNavigate: jest.fn(),
+        store: null,
+        localStorage: window.localStorage,
+      });
+
+      // Action
+      billsPage.handleClickIconEye(icon);
+
+      // Assert
+      const modalBody = document.querySelector(".modal-body");
+      expect(modalBody.innerHTML).toContain(
+        `<img width="25" src="https://example.com/bill.png" alt="Bill">`
+      );
+      expect(modalMock).toHaveBeenCalledWith('show');
+    });
+
+    test("Then eye icons should have 'click' event listener", () => {
+      const mockElement = {
+        addEventListener: jest.fn(),
+        getAttribute: jest.fn().mockReturnValue("https://example.com/bill.png"),
+      };
+      document.querySelectorAll = jest.fn().mockReturnValue([mockElement]);
+
+      const billPage = new Bills({
+        document,
+        onNavigate: jest.fn(),
+        store: null,
+        localStorage: window.localStorage,
+      });
+
+      expect(mockElement.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+    });
 
   })
 })
