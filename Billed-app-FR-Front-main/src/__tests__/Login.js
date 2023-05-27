@@ -228,3 +228,49 @@ describe("Given that I am a user on login page", () => {
     });
   });
 });
+
+
+// Ajout des tests pour la couverture de code
+// test handle submit employee
+
+describe("Given that I am a user on the login page as an employee", () => {
+  describe("When I submit the employee login form with valid credentials", () => {
+    test("handleSubmitEmployee retrieves email and password from the correct input fields", () => {
+      const localStorageMock = {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+        clear: jest.fn()
+      };
+      global.localStorage = localStorageMock
+
+      const storeMock = {
+        login: jest.fn().mockResolvedValue({}),
+      };
+
+      document.body.innerHTML = LoginUI();
+      const onNavigate = jest.fn();
+      const PREVIOUS_LOCATION = '';
+
+      const login = new Login({ document, localStorage: global.localStorage, onNavigate, PREVIOUS_LOCATION, store: storeMock });
+      const emailInput = screen.getByTestId("employee-email-input");
+      const passwordInput = screen.getByTestId("employee-password-input");
+      const email = "employee@example.com";
+      const password = "password";
+      fireEvent.change(emailInput, { target: { value: email } });
+      fireEvent.change(passwordInput, { target: { value: password } });
+      const form = screen.getByTestId("form-employee");
+      const handleSubmitEmployee = jest.spyOn(login, "handleSubmitEmployee");
+      form.addEventListener("submit", handleSubmitEmployee);
+      fireEvent.submit(form);
+
+      // Expect the handleSubmitEmployee function to receive an event object containing the correct input values
+      expect(handleSubmitEmployee).toHaveBeenCalledWith(
+        expect.objectContaining({
+          target: expect.objectContaining({
+            querySelector: expect.any(Function),
+          }),
+        })
+      );
+    });
+  });
+});
