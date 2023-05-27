@@ -196,8 +196,78 @@ describe("Given I am connected as an employee", () => {
           formattedDate: expect.any(String),
         },
       ]);
+    })
+  })
+})
 
+// test d'intégration GET
+describe("Given I am connected as an employee", () => {
+  describe("When I call getBills", () => {
+    let store; // Déclaration de la variable `store` au niveau du scope de la suite de tests
+
+    beforeEach(() => {
+      // Création de l'objet `store` avec une méthode mockée `bills`
+      store = {
+        bills: jest.fn().mockReturnValue({
+          list: jest.fn(),
+        }),
+      };
+
+      Object.defineProperty(
+        window,
+        'localStorage',
+        { value: localStorageMock }
+      )
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: "a@a"
+      }))
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.appendChild(root)
+      router()
     })
 
+    test("fetches bills from an API and fails with 404 message error", async () => {
+      store.bills.mockImplementationOnce(() => {
+        return {
+          list: () => {
+            return Promise.reject(new Error("Erreur 404"))
+          }
+        }
+      })
+      const billPage = new Bills({
+        document,
+        onNavigate,
+        store,
+        localStorage: window.localStorage,
+      });
+      try {
+        await billPage.getBills();
+      } catch (e) {
+        expect(e.message).toMatch('Erreur 404');
+      }
+    })
+
+    test("fetches bills from an API and fails with 500 message error", async () => {
+      store.bills.mockImplementationOnce(() => {
+        return {
+          list: () => {
+            return Promise.reject(new Error("Erreur 500"))
+          }
+        }
+      })
+      const billPage = new Bills({
+        document,
+        onNavigate,
+        store,
+        localStorage: window.localStorage,
+      });
+      try {
+        await billPage.getBills();
+      } catch (e) {
+        expect(e.message).toMatch('Erreur 500');
+      }
+    })
   })
 })
